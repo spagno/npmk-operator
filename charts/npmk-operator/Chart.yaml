@@ -1,0 +1,22 @@
+apiVersion: v2
+name: npmk-operator
+description: A Kubernetes operator for managing Nginx Proxy Manager proxy hosts with automatic Let's Encrypt SSL certificates
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+kubeVersion: ">=1.19.0-0"
+home: https://github.com/spagno/npmk-operator
+sources:
+  - https://github.com/spagno/npmk-operator
+maintainers:
+  - name: spagno
+keywords:
+  - nginx-proxy-manager
+  - kubernetes
+  - operator
+  - ssl
+  - letsencrypt
+  - proxy
+annotations:
+  artifacthub.io/category: networking
+  artifacthub.io/license: Apache-2.0

@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: npmko-config
+  namespace: npmk-operator-system
+data:
+  npm-url: "http://nginx-proxy-manager:81"
+  npm-email: "admin@example.com"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: npmko-credentials
+  namespace: npmk-operator-system
+type: Opaque
+stringData:
+  password: "changeme"

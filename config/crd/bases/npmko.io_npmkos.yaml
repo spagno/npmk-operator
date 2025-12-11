@@ -1,0 +1,183 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: npmkos.npmko.io
+spec:
+  group: npmko.io
+  names:
+    kind: Npmko
+    listKind: NpmkoList
+    plural: npmkos
+    singular: npmko
+    shortNames:
+    - npmko
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    additionalPrinterColumns:
+    - name: Phase
+      type: string
+      jsonPath: .status.phase
+    - name: Forward Host
+      type: string
+      jsonPath: .status.forwardHost
+      priority: 1
+    - name: Endpoints
+      type: integer
+      jsonPath: .status.readyEndpoints
+      priority: 1
+    - name: Service
+      type: string
+      jsonPath: .spec.serviceName
+    - name: SSL
+      type: boolean
+      jsonPath: .spec.ssl.enabled
+    - name: Age
+      type: date
+      jsonPath: .metadata.creationTimestamp
+    schema:
+      openAPIV3Schema:
+        description: Npmko is the Schema for configuring Nginx Proxy Manager proxy hosts
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation of an object.'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this object represents.'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: NpmkoSpec defines the desired state of Npmko
+            properties:
+              serviceName:
+                description: Name of the Kubernetes service to proxy to
+                type: string
+                minLength: 1
+              serviceSelector:
+                description: Label selector for the target service (alternative to serviceName)
+                additionalProperties:
+                  type: string
+                type: object
+              domainNames:
+                description: Domain names for the proxy host
+                items:
+                  type: string
+                type: array
+                minItems: 1
+              forwardScheme:
+                description: Protocol scheme for forwarding requests
+                type: string
+                default: http
+                enum:
+                - http
+                - https
+              cachingEnabled:
+                description: Enable caching of responses
+                type: boolean
+                default: false
+              blockExploits:
+                description: Enable exploit blocking
+                type: boolean
+                default: true
+              allowWebsockets:
+                description: Allow WebSocket connections
+                type: boolean
+                default: true
+              ssl:
+                description: SSL configuration for Let's Encrypt certificates via DNS challenge
+                type: object
+                properties:
+                  enabled:
+                    description: Enable SSL with Let's Encrypt certificate
+                    type: boolean
+                  forceSSL:
+                    description: Force HTTPS by redirecting HTTP requests
+                    type: boolean
+                    default: true
+                  dnsChallenge:
+                    description: DNS challenge configuration for Let's Encrypt
+                    type: object
+                    properties:
+                      provider:
+                        description: DNS provider name (cloudflare, route53, digitalocean, powerdns, etc.)
+                        type: string
+                        minLength: 1
+                      credentialsSecretRef:
+                        description: Reference to Secret containing DNS provider credentials
+                        type: object
+                        properties:
+                          name:
+                            description: Name of the Secret
+                            type: string
+                            minLength: 1
+                          key:
+                            description: Key in the Secret containing credentials
+                            type: string
+                            default: credentials
+                        required:
+                        - name
+                      propagationSeconds:
+                        description: Seconds to wait for DNS propagation before validation
+                        type: integer
+                        default: 30
+                        minimum: 10
+                        maximum: 600
+                    required:
+                    - provider
+                    - credentialsSecretRef
+                required:
+                - enabled
+              http2Support:
+                description: Enable HTTP/2 support
+                type: boolean
+                default: true
+              hstsEnabled:
+                description: Enable HSTS (HTTP Strict Transport Security)
+                type: boolean
+                default: false
+              hstsSubdomains:
+                description: Include subdomains in HSTS policy
+                type: boolean
+                default: false
+              advancedConfig:
+                description: Custom Nginx configuration block
+                type: string
+            required:
+            - serviceName
+            - domainNames
+            type: object
+          status:
+            description: NpmkoStatus defines the observed state of Npmko
+            properties:
+              proxyHostId:
+                description: NPM proxy host ID
+                type: integer
+              certificateId:
+                description: NPM Let's Encrypt certificate ID
+                type: integer
+              forwardHost:
+                description: Current pod IP being used for forwarding
+                type: string
+              forwardPort:
+                description: Current port being used for forwarding
+                type: integer
+              readyEndpoints:
+                description: Count of ready endpoints available
+                type: integer
+              phase:
+                description: Current phase of the resource
+                type: string
+                enum:
+                - Pending
+                - Ready
+                - Error
+              message:
+                description: Human-readable status message
+                type: string
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

@@ -1,0 +1,65 @@
+apiVersion: npmko.io/v1alpha1
+kind: Npmko
+metadata:
+  name: example-npmko
+  namespace: default
+spec:
+  serviceName: my-service
+  domainNames:
+    - example.com
+    - www.example.com
+  forwardScheme: http
+  cachingEnabled: false
+  blockExploits: true
+  allowWebsockets: true
+  http2Support: true
+  hstsEnabled: true
+  hstsSubdomains: false
+  # SSL configuration with Let's Encrypt DNS challenge
+  ssl:
+    enabled: true
+    forceSSL: true
+    dnsChallenge:
+      # Supported providers: cloudflare, route53, digitalocean, powerdns, etc.
+      provider: cloudflare
+      credentialsSecretRef:
+        name: cloudflare-dns-credentials
+        key: credentials  # optional, defaults to "credentials"
+      propagationSeconds: 30  # optional, default 30
+---
+# Example Secret for Cloudflare DNS credentials
+# The format depends on the DNS provider
+apiVersion: v1
+kind: Secret
+metadata:
+  name: cloudflare-dns-credentials
+  namespace: default
+type: Opaque
+stringData:
+  # Cloudflare API Token format
+  credentials: |
+    dns_cloudflare_api_token = YOUR_CLOUDFLARE_API_TOKEN
+---
+# Example Secret for Route53 (AWS)
+apiVersion: v1
+kind: Secret
+metadata:
+  name: route53-dns-credentials
+  namespace: default
+type: Opaque
+stringData:
+  credentials: |
+    [default]
+    aws_access_key_id = YOUR_AWS_ACCESS_KEY
+    aws_secret_access_key = YOUR_AWS_SECRET_KEY
+---
+# Example Secret for DigitalOcean
+apiVersion: v1
+kind: Secret
+metadata:
+  name: digitalocean-dns-credentials
+  namespace: default
+type: Opaque
+stringData:
+  credentials: |
+    dns_digitalocean_token = YOUR_DO_TOKEN

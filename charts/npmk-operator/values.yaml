@@ -1,0 +1,126 @@
+# NPMK Operator Helm Chart configuration
+
+# -- Number of replicas (only 1 supported with leader election)
+replicaCount: 1
+
+image:
+  # -- Container image repository (REQUIRED: set to your registry)
+  repository: ""
+  # -- Container image pull policy
+  pullPolicy: Always
+  # -- Container image tag (defaults to Chart appVersion)
+  tag: ""
+
+# -- Image pull secrets for private registries
+imagePullSecrets: []
+
+# -- Override the name of the chart
+nameOverride: ""
+# -- Override the full name of the chart
+fullnameOverride: ""
+
+serviceAccount:
+  # -- Create a service account
+  create: true
+  # -- Annotations for the service account
+  annotations: {}
+  # -- Name of the service account (auto-generated if not set)
+  name: ""
+
+# -- Pod annotations
+podAnnotations: {}
+
+# -- Pod security context
+podSecurityContext: {}
+  # fsGroup: 2000
+
+# -- Container security context
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 65532
+
+# -- Resource requests and limits
+resources:
+  limits:
+    cpu: 500m
+    memory: 128Mi
+  requests:
+    cpu: 10m
+    memory: 64Mi
+
+# -- Node selector for pod scheduling
+nodeSelector: {}
+
+# -- Tolerations for pod scheduling
+tolerations: []
+
+# -- Affinity rules for pod scheduling
+affinity: {}
+
+# Operator configuration
+operator:
+  # -- Enable leader election (recommended for HA)
+  leaderElect: true
+  # -- Metrics bind address
+  metricsAddr: ":8080"
+  # -- Health probe bind address
+  healthProbeAddr: ":8081"
+  # -- Log level (debug, info, error)
+  logLevel: info
+
+# NPM connection settings
+npm:
+  # -- NPM API URL (required)
+  url: ""
+  # -- NPM admin email (required)
+  email: ""
+  # -- NPM admin password (required if not using existingSecret)
+  password: ""
+  # -- Use existing secret for NPM credentials
+  existingSecret: ""
+  # -- Key in existing secret containing the password
+  existingSecretKey: "password"
+
+# Metrics and monitoring
+metrics:
+  # -- Enable metrics endpoint
+  enabled: true
+  # -- Metrics service port
+  port: 8080
+  
+  serviceMonitor:
+    # -- Create a ServiceMonitor for Prometheus Operator
+    enabled: false
+    # -- Scrape interval
+    interval: 30s
+    # -- Additional labels for the ServiceMonitor
+    labels: {}
+    # -- Namespace for the ServiceMonitor (defaults to release namespace)
+    namespace: ""
+
+# Health probes configuration
+probes:
+  liveness:
+    # -- Enable liveness probe
+    enabled: true
+    # -- Initial delay before liveness probe starts
+    initialDelaySeconds: 15
+    # -- Period between liveness probes
+    periodSeconds: 20
+  readiness:
+    # -- Enable readiness probe
+    enabled: true
+    # -- Initial delay before readiness probe starts
+    initialDelaySeconds: 5
+    # -- Period between readiness probes
+    periodSeconds: 10
+
+# RBAC configuration
+rbac:
+  # -- Create RBAC resources
+  create: true

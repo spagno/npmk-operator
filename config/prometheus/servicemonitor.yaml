@@ -1,0 +1,17 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: npmk-operator
+  labels:
+    app: npmk-operator
+spec:
+  selector:
+    matchLabels:
+      app: npmk-operator
+  endpoints:
+  - port: metrics
+    interval: 30s
+    path: /metrics
+  namespaceSelector:
+    matchNames:
+    - npmk-operator-system

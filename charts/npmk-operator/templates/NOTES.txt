@@ -1,0 +1,69 @@
+Thank you for installing {{ .Chart.Name }}!
+
+Your release is named {{ .Release.Name }}.
+
+## Verify Installation
+
+Check the operator is running:
+
+  kubectl get pods -n {{ .Release.Namespace }} -l app.kubernetes.io/name={{ include "npmk-operator.name" . }}
+
+Check the operator logs:
+
+  kubectl logs -n {{ .Release.Namespace }} deployment/{{ include "npmk-operator.fullname" . }}
+
+## Create Your First Proxy Host
+
+1. Create a DNS credentials secret (for Let's Encrypt):
+
+   kubectl create secret generic cloudflare-credentials \
+     --namespace=my-app-namespace \
+     --from-literal=credentials='dns_cloudflare_api_token = YOUR_API_TOKEN'
+
+2. Create an Npmko resource:
+
+   cat <<EOF | kubectl apply -f -
+   apiVersion: npmko.io/v1alpha1
+   kind: Npmko
+   metadata:
+     name: my-app
+     namespace: my-app-namespace
+   spec:
+     serviceName: my-app-service
+     domainNames:
+       - myapp.example.com
+     ssl:
+       enabled: true
+       forceSSL: true
+       dnsChallenge:
+         provider: cloudflare
+         credentialsSecretRef:
+           name: cloudflare-credentials
+   EOF
+
+3. Check the status:
+
+   kubectl get npmko -A
+
+{{- if .Values.metrics.enabled }}
+
+## Metrics
+
+Metrics are available at port {{ .Values.metrics.port }}.
+
+{{- if .Values.metrics.serviceMonitor.enabled }}
+
+ServiceMonitor is enabled. Prometheus should automatically discover and scrape metrics.
+{{- else }}
+
+To access metrics locally:
+
+  kubectl port-forward -n {{ .Release.Namespace }} svc/{{ include "npmk-operator.fullname" . }}-metrics {{ .Values.metrics.port }}:{{ .Values.metrics.port }}
+  curl http://localhost:{{ .Values.metrics.port }}/metrics
+{{- end }}
+{{- end }}
+
+## Documentation
+
+- Main documentation: https://github.com/spagno/npmk-operator
+- Metrics documentation: https://github.com/spagno/npmk-operator/blob/main/docs/METRICS.md

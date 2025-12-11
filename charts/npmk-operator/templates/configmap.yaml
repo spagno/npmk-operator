@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: npmko-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "npmk-operator.labels" . | nindent 4 }}
+data:
+  npm-url: {{ .Values.npm.url | quote }}
+  npm-email: {{ .Values.npm.email | quote }}
