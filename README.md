@@ -159,7 +159,7 @@ kubectl apply -f config/samples/configmap.yaml
 kubectl apply -f config/samples/npmko_sample.yaml
 
 # Check status
-kubectl get npm -A
+kubectl get npmko -A
 ```
 
 ### 4. (Optional) Deploy Prometheus Monitoring
@@ -224,7 +224,6 @@ kubectl get crd npmkos.npmko.io
 
 ```bash
 kubectl get npmko -A
-kubectl get npm -A                    # Short name
 kubectl describe npmko <name> -n <namespace>
 ```
 
@@ -286,14 +285,18 @@ go test ./api/v1alpha1/... -v
 - **API types** (`api/v1alpha1/`): Phase constants, spec/status structs, deep copy
 - **Config package** (`pkg/config/`): ConfigMap parsing, Secret parsing, validation, merge logic
 - **NPM client** (`pkg/npm/`): Login, CRUD operations for proxy hosts, certificate management
+- **Controller** (`controllers/`): Endpoint discovery, proxy host sync, status updates, deletion handling
 
 **Current coverage:**
 
 | Package | Coverage |
 |---------|----------|
-| `pkg/config` | 96.4% |
-| `pkg/npm` | 63.9% |
-| `api/v1alpha1` | 21.5% |
+| `controllers` | 70.5% |
+| `pkg/config` | 100% |
+| `pkg/npm` | 98.4% |
+| `pkg/metrics` | 100% |
+| `api/v1alpha1` | 72.2% |
+| **Total** | **76.4%** |
 
 ## API Reference
 

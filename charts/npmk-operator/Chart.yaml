@@ -2,8 +2,8 @@ apiVersion: v2
 name: npmk-operator
 description: A Kubernetes operator for managing Nginx Proxy Manager proxy hosts with automatic Let's Encrypt SSL certificates
 type: application
-version: 0.1.0
-appVersion: "0.1.0"
+version: 0.1.1
+appVersion: "0.1.1"
 kubeVersion: ">=1.19.0-0"
 home: https://github.com/spagno/npmk-operator
 sources:

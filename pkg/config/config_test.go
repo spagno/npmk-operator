@@ -260,3 +260,141 @@ func TestConfigValidate(t *testing.T) {
 		})
 	}
 }
+
+func TestConfigErrorError(t *testing.T) {
+	tests := []struct {
+		name string
+		err  *ConfigError
+		want string
+	}{
+		{
+			name: "url error",
+			err: &ConfigError{
+				Field:   "npm-url",
+				Message: "NPM URL is required",
+			},
+			want: "npm-url: NPM URL is required",
+		},
+		{
+			name: "email error",
+			err: &ConfigError{
+				Field:   "npm-email",
+				Message: "NPM email is required",
+			},
+			want: "npm-email: NPM email is required",
+		},
+		{
+			name: "password error",
+			err: &ConfigError{
+				Field:   "npm-password",
+				Message: "NPM password is required",
+			},
+			want: "npm-password: NPM password is required",
+		},
+		{
+			name: "custom error",
+			err: &ConfigError{
+				Field:   "custom-field",
+				Message: "custom message",
+			},
+			want: "custom-field: custom message",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := tt.err.Error()
+			if got != tt.want {
+				t.Errorf("ConfigError.Error() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestConfigConstants(t *testing.T) {
+	if DefaultOperatorNamespace != "npmk-operator-system" {
+		t.Errorf("DefaultOperatorNamespace = %v, want npmk-operator-system", DefaultOperatorNamespace)
+	}
+	if ConfigMapName != "npmko-config" {
+		t.Errorf("ConfigMapName = %v, want npmko-config", ConfigMapName)
+	}
+	if CredentialsSecretName != "npmko-credentials" {
+		t.Errorf("CredentialsSecretName = %v, want npmko-credentials", CredentialsSecretName)
+	}
+}
+
+func TestConfigStruct(t *testing.T) {
+	cfg := &Config{
+		NPMURL:      "http://npm:81",
+		NPMEmail:    "test@example.com",
+		NPMPassword: "secret",
+	}
+
+	if cfg.NPMURL != "http://npm:81" {
+		t.Errorf("NPMURL = %v, want http://npm:81", cfg.NPMURL)
+	}
+	if cfg.NPMEmail != "test@example.com" {
+		t.Errorf("NPMEmail = %v, want test@example.com", cfg.NPMEmail)
+	}
+	if cfg.NPMPassword != "secret" {
+		t.Errorf("NPMPassword = %v, want secret", cfg.NPMPassword)
+	}
+}
+
+func TestParseConfigMapNilData(t *testing.T) {
+	cm := &corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{Name: "npm-config"},
+		// Data is nil
+	}
+
+	cfg := ParseConfigMap(cm)
+	if cfg.NPMURL != "" || cfg.NPMEmail != "" || cfg.NPMPassword != "" {
+		t.Error("ParseConfigMap with nil Data should return empty Config")
+	}
+}
+
+func TestParseCredentialsSecretNilData(t *testing.T) {
+	secret := &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{Name: "npm-credentials"},
+		// Data is nil
+	}
+
+	password := ParseCredentialsSecret(secret)
+	if password != "" {
+		t.Errorf("ParseCredentialsSecret with nil Data should return empty string, got %v", password)
+	}
+}
+
+func TestMergeEmptyConfigs(t *testing.T) {
+	base := &Config{}
+	other := &Config{}
+
+	base.Merge(other)
+
+	if base.NPMURL != "" || base.NPMEmail != "" || base.NPMPassword != "" {
+		t.Error("Merge of empty configs should result in empty config")
+	}
+}
+
+func TestMergeNilOther(t *testing.T) {
+	base := &Config{
+		NPMURL:      "http://npm:81",
+		NPMEmail:    "admin@example.com",
+		NPMPassword: "password",
+	}
+
+	// Create empty config to merge (simulating partial override)
+	other := &Config{}
+	base.Merge(other)
+
+	// Base should remain unchanged
+	if base.NPMURL != "http://npm:81" {
+		t.Errorf("NPMURL changed unexpectedly to %v", base.NPMURL)
+	}
+	if base.NPMEmail != "admin@example.com" {
+		t.Errorf("NPMEmail changed unexpectedly to %v", base.NPMEmail)
+	}
+	if base.NPMPassword != "password" {
+		t.Errorf("NPMPassword changed unexpectedly to %v", base.NPMPassword)
+	}
+}

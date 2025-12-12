@@ -157,7 +157,10 @@ type NpmkoStatus struct {
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="Phase",type="string",JSONPath=".status.phase"
-// +kubebuilder:printcolumn:name="ProxyHostId",type="integer",JSONPath=".status.proxyHostId"
+// +kubebuilder:printcolumn:name="Service",type="string",JSONPath=".spec.serviceName"
+// +kubebuilder:printcolumn:name="SSL",type="boolean",JSONPath=".spec.ssl.enabled"
+// +kubebuilder:printcolumn:name="Forward Host",type="string",JSONPath=".status.forwardHost",priority=1
+// +kubebuilder:printcolumn:name="Endpoints",type="integer",JSONPath=".status.readyEndpoints",priority=1
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 type Npmko struct {
 	metav1.TypeMeta   `json:",inline"`

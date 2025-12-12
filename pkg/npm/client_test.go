@@ -609,3 +609,399 @@ func TestLoginNetworkError(t *testing.T) {
 		t.Error("Login() should return error for network failure")
 	}
 }
+
+func TestLoginDecodeError(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		// Return invalid JSON
+		_, _ = w.Write([]byte("invalid json"))
+	}))
+	defer server.Close()
+
+	client := NewClient(server.URL, "admin@example.com", "password")
+	err := client.Login(context.Background())
+	if err == nil {
+		t.Error("Login() should return error for invalid JSON response")
+	}
+}
+
+func TestCreateProxyHostDecodeError(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusCreated)
+		// Return invalid JSON
+		_, _ = w.Write([]byte("not json"))
+	}))
+	defer server.Close()
+
+	client := NewClient(server.URL, "admin@example.com", "password")
+	client.token = "test-token"
+
+	_, err := client.CreateProxyHost(context.Background(), ProxyHost{
+		DomainNames:   []string{"example.com"},
+		ForwardHost:   "10.0.0.1",
+		ForwardPort:   8080,
+		ForwardScheme: "http",
+	})
+	if err == nil {
+		t.Error("CreateProxyHost() should return error for invalid JSON response")
+	}
+}
+
+func TestGetCertificateDecodeError(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		// Return invalid JSON
+		_, _ = w.Write([]byte("invalid"))
+	}))
+	defer server.Close()
+
+	client := NewClient(server.URL, "admin@example.com", "password")
+	client.token = "test-token"
+
+	_, err := client.GetCertificate(context.Background(), 123)
+	if err == nil {
+		t.Error("GetCertificate() should return error for invalid JSON response")
+	}
+}
+
+func TestCreateLetsEncryptCertificateDecodeError(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusCreated)
+		// Return invalid JSON
+		_, _ = w.Write([]byte("bad json"))
+	}))
+	defer server.Close()
+
+	client := NewClient(server.URL, "admin@example.com", "password")
+	client.token = "test-token"
+
+	propagation := 30
+	_, err := client.CreateLetsEncryptCertificate(
+		context.Background(),
+		[]string{"example.com"},
+		"cloudflare",
+		"api_key=xxx",
+		&propagation,
+	)
+	if err == nil {
+		t.Error("CreateLetsEncryptCertificate() should return error for invalid JSON response")
+	}
+}
+
+func TestListCertificatesDecodeError(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		// Return invalid JSON
+		_, _ = w.Write([]byte("not valid json"))
+	}))
+	defer server.Close()
+
+	client := NewClient(server.URL, "admin@example.com", "password")
+	client.token = "test-token"
+
+	_, err := client.ListCertificates(context.Background())
+	if err == nil {
+		t.Error("ListCertificates() should return error for invalid JSON response")
+	}
+}
+
+func TestFindCertificateByDomainsError(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+	}))
+	defer server.Close()
+
+	client := NewClient(server.URL, "admin@example.com", "password")
+	client.token = "test-token"
+
+	_, err := client.FindCertificateByDomains(context.Background(), []string{"example.com"})
+	if err == nil {
+		t.Error("FindCertificateByDomains() should return error when ListCertificates fails")
+	}
+}
+
+func TestCreateLetsEncryptCertificateWithNilPropagation(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var req CertificateRequest
+		_ = json.NewDecoder(r.Body).Decode(&req)
+
+		if req.Meta.PropagationSeconds != nil {
+			t.Error("Expected nil PropagationSeconds")
+		}
+
+		w.WriteHeader(http.StatusCreated)
+		_ = json.NewEncoder(w).Encode(CertificateResponse{
+			ID:          456,
+			DomainNames: req.DomainNames,
+			Provider:    "letsencrypt",
+		})
+	}))
+	defer server.Close()
+
+	client := NewClient(server.URL, "admin@example.com", "password")
+	client.token = "test-token"
+
+	// Test with nil propagation seconds
+	cert, err := client.CreateLetsEncryptCertificate(
+		context.Background(),
+		[]string{"example.com"},
+		"route53",
+		"credentials_content",
+		nil,
+	)
+
+	if err != nil {
+		t.Errorf("CreateLetsEncryptCertificate() error = %v", err)
+	}
+	if cert.ID != 456 {
+		t.Errorf("CreateLetsEncryptCertificate() ID = %v, want 456", cert.ID)
+	}
+}
+
+func TestProxyHostFields(t *testing.T) {
+	// Test that ProxyHost struct has all expected fields
+	host := ProxyHost{
+		DomainNames:           []string{"a.com", "b.com"},
+		ForwardHost:           "10.0.0.1",
+		ForwardPort:           8080,
+		ForwardScheme:         "https",
+		CachingEnabled:        true,
+		BlockExploits:         true,
+		AllowWebsocketUpgrade: true,
+		CertificateId:         123,
+		HTTP2Support:          true,
+		HSTSEnabled:           true,
+		HSTSSubdomains:        true,
+		SSLForced:             true,
+		AdvancedConfig:        "proxy_timeout 300;",
+		AccessListId:          1,
+		Meta:                  map[string]interface{}{"key": "value"},
+		Locations:             []interface{}{"location1"},
+	}
+
+	if len(host.DomainNames) != 2 {
+		t.Errorf("DomainNames length = %v, want 2", len(host.DomainNames))
+	}
+	if host.ForwardScheme != "https" {
+		t.Errorf("ForwardScheme = %v, want https", host.ForwardScheme)
+	}
+	if !host.SSLForced {
+		t.Error("SSLForced should be true")
+	}
+	if host.AdvancedConfig != "proxy_timeout 300;" {
+		t.Errorf("AdvancedConfig = %v, want proxy_timeout 300;", host.AdvancedConfig)
+	}
+}
+
+func TestCertificateRequestFields(t *testing.T) {
+	propagation := 60
+	req := CertificateRequest{
+		DomainNames: []string{"test.com"},
+		Provider:    "letsencrypt",
+		Meta: CertificateMeta{
+			DNSChallenge:           true,
+			DNSProvider:            "cloudflare",
+			DNSProviderCredentials: "api_token=xxx",
+			PropagationSeconds:     &propagation,
+		},
+	}
+
+	if req.Provider != "letsencrypt" {
+		t.Errorf("Provider = %v, want letsencrypt", req.Provider)
+	}
+	if !req.Meta.DNSChallenge {
+		t.Error("DNSChallenge should be true")
+	}
+	if req.Meta.DNSProvider != "cloudflare" {
+		t.Errorf("DNSProvider = %v, want cloudflare", req.Meta.DNSProvider)
+	}
+	if *req.Meta.PropagationSeconds != 60 {
+		t.Errorf("PropagationSeconds = %v, want 60", *req.Meta.PropagationSeconds)
+	}
+}
+
+func TestCertificateResponseFields(t *testing.T) {
+	resp := CertificateResponse{
+		ID:          100,
+		DomainNames: []string{"example.com", "www.example.com"},
+		ExpiresOn:   "2025-12-31T00:00:00Z",
+		Provider:    "letsencrypt",
+	}
+
+	if resp.ID != 100 {
+		t.Errorf("ID = %v, want 100", resp.ID)
+	}
+	if len(resp.DomainNames) != 2 {
+		t.Errorf("DomainNames length = %v, want 2", len(resp.DomainNames))
+	}
+	if resp.ExpiresOn != "2025-12-31T00:00:00Z" {
+		t.Errorf("ExpiresOn = %v, want 2025-12-31T00:00:00Z", resp.ExpiresOn)
+	}
+}
+
+func TestReadErrorBody(t *testing.T) {
+	tests := []struct {
+		name string
+		body string
+		want string
+	}{
+		{
+			name: "json error body",
+			body: `{"error": "something went wrong"}`,
+			want: `{"error": "something went wrong"}`,
+		},
+		{
+			name: "plain text body",
+			body: "Internal Server Error",
+			want: "Internal Server Error",
+		},
+		{
+			name: "empty body",
+			body: "",
+			want: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusBadRequest)
+				_, _ = w.Write([]byte(tt.body))
+			}))
+			defer server.Close()
+
+			client := NewClient(server.URL, "admin@example.com", "password")
+			client.token = "test-token"
+
+			// This will trigger error path and call readErrorBody
+			_, err := client.CreateProxyHost(context.Background(), ProxyHost{
+				DomainNames: []string{"test.com"},
+			})
+
+			if err == nil {
+				t.Error("Expected error")
+			}
+			// Error message should contain the body content
+			if tt.body != "" && !contains(err.Error(), tt.body) {
+				t.Errorf("Error message should contain body, got %v", err.Error())
+			}
+		})
+	}
+}
+
+func contains(s, substr string) bool {
+	return len(s) >= len(substr) && (s == substr || len(substr) == 0 ||
+		(len(s) > 0 && len(substr) > 0 && s != "" && substr != "" &&
+			(s[0:len(substr)] == substr || contains(s[1:], substr))))
+}
+
+func TestClientWithToken(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Verify token is set in Authorization header
+		auth := r.Header.Get("Authorization")
+		if auth != "Bearer my-custom-token" {
+			t.Errorf("Authorization header = %v, want Bearer my-custom-token", auth)
+		}
+		w.WriteHeader(http.StatusOK)
+		_ = json.NewEncoder(w).Encode([]CertificateResponse{})
+	}))
+	defer server.Close()
+
+	client := NewClient(server.URL, "admin@example.com", "password")
+	client.token = "my-custom-token"
+
+	_, err := client.ListCertificates(context.Background())
+	if err != nil {
+		t.Errorf("ListCertificates() error = %v", err)
+	}
+}
+
+func TestDeleteProxyHostNetworkError(t *testing.T) {
+	client := NewClient("http://localhost:99999", "admin@example.com", "password")
+	client.token = "test-token"
+
+	err := client.DeleteProxyHost(context.Background(), 42)
+	if err == nil {
+		t.Error("DeleteProxyHost() should return error for network failure")
+	}
+}
+
+func TestDeleteCertificateNetworkError(t *testing.T) {
+	client := NewClient("http://localhost:99999", "admin@example.com", "password")
+	client.token = "test-token"
+
+	err := client.DeleteCertificate(context.Background(), 42)
+	if err == nil {
+		t.Error("DeleteCertificate() should return error for network failure")
+	}
+}
+
+func TestGetCertificateNetworkError(t *testing.T) {
+	client := NewClient("http://localhost:99999", "admin@example.com", "password")
+	client.token = "test-token"
+
+	_, err := client.GetCertificate(context.Background(), 42)
+	if err == nil {
+		t.Error("GetCertificate() should return error for network failure")
+	}
+}
+
+func TestUpdateProxyHostNetworkError(t *testing.T) {
+	client := NewClient("http://localhost:99999", "admin@example.com", "password")
+	client.token = "test-token"
+
+	_, err := client.UpdateProxyHost(context.Background(), 42, ProxyHost{})
+	if err == nil {
+		t.Error("UpdateProxyHost() should return error for network failure")
+	}
+}
+
+func TestCreateLetsEncryptCertificateNetworkError(t *testing.T) {
+	client := NewClient("http://localhost:99999", "admin@example.com", "password")
+	client.token = "test-token"
+
+	_, err := client.CreateLetsEncryptCertificate(context.Background(), []string{"test.com"}, "cloudflare", "creds", nil)
+	if err == nil {
+		t.Error("CreateLetsEncryptCertificate() should return error for network failure")
+	}
+}
+
+func TestListCertificatesNetworkError(t *testing.T) {
+	client := NewClient("http://localhost:99999", "admin@example.com", "password")
+	client.token = "test-token"
+
+	_, err := client.ListCertificates(context.Background())
+	if err == nil {
+		t.Error("ListCertificates() should return error for network failure")
+	}
+}
+
+func TestDoRequestWithNoBody(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			t.Errorf("Expected GET, got %s", r.Method)
+		}
+		w.WriteHeader(http.StatusOK)
+		_ = json.NewEncoder(w).Encode([]CertificateResponse{})
+	}))
+	defer server.Close()
+
+	client := NewClient(server.URL, "admin@example.com", "password")
+	client.token = "test-token"
+
+	// ListCertificates makes a GET request with no body
+	certs, err := client.ListCertificates(context.Background())
+	if err != nil {
+		t.Errorf("ListCertificates() error = %v", err)
+	}
+	if certs == nil {
+		t.Error("Expected non-nil response")
+	}
+}
+
+func TestDefaultTimeout(t *testing.T) {
+	// Verify that defaultTimeout is properly set
+	if defaultTimeout.Seconds() != 30 {
+		t.Errorf("defaultTimeout = %v, want 30s", defaultTimeout)
+	}
+}
