@@ -1,6 +1,17 @@
 IMG ?= npmk-operator:latest
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
 
+# Tool versions - keep in sync with CI
+GOLANGCI_LINT_VERSION ?= v2.0.2
+
+# Local bin directory for tools
+LOCALBIN ?= $(shell pwd)/bin
+$(LOCALBIN):
+	mkdir -p $(LOCALBIN)
+
+# Tool binaries
+GOLANGCI_LINT ?= $(LOCALBIN)/golangci-lint
+
 ##@ General
 
 .PHONY: help
@@ -18,7 +29,8 @@ build: ## Build the operator binary
 	go build -o bin/manager ./main.go
 
 .PHONY: lint
-lint: ## Run linters
+lint: golangci-lint ## Run linters
+	$(GOLANGCI_LINT) run
 	go vet ./...
 
 ##@ Build
@@ -75,3 +87,11 @@ coverage: ## Run tests with coverage report
 vulncheck: ## Run Go vulnerability check
 	@command -v govulncheck >/dev/null 2>&1 || go install golang.org/x/vuln/cmd/govulncheck@latest
 	govulncheck ./...
+
+##@ Tools
+
+.PHONY: golangci-lint
+golangci-lint: $(GOLANGCI_LINT) ## Download golangci-lint locally if necessary
+$(GOLANGCI_LINT): $(LOCALBIN)
+	@test -s $(LOCALBIN)/golangci-lint && $(LOCALBIN)/golangci-lint version --format short | grep -q $(subst v,,$(GOLANGCI_LINT_VERSION)) || \
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(LOCALBIN) $(GOLANGCI_LINT_VERSION)

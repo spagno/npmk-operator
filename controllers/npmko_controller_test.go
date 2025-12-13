@@ -804,7 +804,7 @@ func TestReconcileResourceNotFound(t *testing.T) {
 		t.Errorf("Reconcile() unexpected error = %v", err)
 	}
 	// Resource not found should return empty result without error
-	if result.Requeue || result.RequeueAfter > 0 {
+	if result.RequeueAfter > 0 {
 		t.Errorf("Reconcile() for not found should not requeue, got %v", result)
 	}
 }

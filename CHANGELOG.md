@@ -5,6 +5,21 @@ All notable changes to the NPMK Operator will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.2] - 2025-12-13
+
+### Changed
+
+- Updated Makefile to use local golangci-lint with pinned version (v2.0.2)
+  - Added `GOLANGCI_LINT_VERSION` variable for version control
+  - Added `LOCALBIN` directory for local tool binaries
+  - Lint target now downloads golangci-lint automatically if not present
+- Pinned golangci-lint version in CI workflow to v2.0.2 for consistency with local development
+- Fixed deprecated `result.Requeue` usage in controller tests (replaced with `result.RequeueAfter`)
+
+### Fixed
+
+- Resolved golangci-lint compatibility issue with Go 1.24 by upgrading to v2.0.2 (built with Go 1.24.1)
+
 ## [0.1.1] - 2025-12-12
 
 ### Added
