@@ -11,7 +11,7 @@ env:
   # IMAGE_NAME: defaults to library/<repo-name>, override with vars.IMAGE_NAME
   REGISTRY: ${{ vars.REGISTRY || 'ghcr.io' }}
   IMAGE_NAME: ${{ vars.IMAGE_NAME || format('library/{0}', github.event.repository.name) }}
-  GO_VERSION: ${{ vars.GO_VERSION || '1.24' }}
+  GO_VERSION: ${{ vars.GO_VERSION || '1.25' }}
 
 jobs:
   release:

@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Updated Go to 1.25 and aligned Kubernetes dependencies on v0.35.2 with controller-runtime v0.23.3.
+- Updated golangci-lint-action to v9 and golangci-lint to v2.12.2.
+
 All notable changes to the NPMK Operator will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
