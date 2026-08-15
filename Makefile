@@ -2,7 +2,7 @@ IMG ?= npmk-operator:latest
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
 
 # Tool versions - keep in sync with CI
-GOLANGCI_LINT_VERSION ?= v2.0.2
+GOLANGCI_LINT_VERSION ?= v2.12.2
 
 # Local bin directory for tools
 LOCALBIN ?= $(shell pwd)/bin
