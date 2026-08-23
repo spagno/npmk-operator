@@ -11,7 +11,7 @@ env:
   # IMAGE_NAME: defaults to library/<repo-name>, override with vars.IMAGE_NAME
   REGISTRY: ${{ vars.REGISTRY || 'ghcr.io' }}
   IMAGE_NAME: ${{ vars.IMAGE_NAME || format('library/{0}', github.event.repository.name) }}
-  GO_VERSION: ${{ vars.GO_VERSION || '1.25' }}
+  GO_VERSION: ${{ vars.GO_VERSION || '1.26' }}
 
 jobs:
   release:
@@ -24,12 +24,12 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
       - name: Setup Go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v7
         with:
           go-version: ${{ env.GO_VERSION }}
 
@@ -67,7 +67,7 @@ jobs:
             VERSION=${{ github.ref_name }}
 
       - name: Setup Helm
-        uses: azure/setup-helm@v4
+        uses: azure/setup-helm@v5
         with:
           version: v3.14.0
 
@@ -85,7 +85,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@0.34.2
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}
           format: 'table'

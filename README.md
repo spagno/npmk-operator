@@ -3,7 +3,7 @@
 [![CI](https://github.com/spagno/npmk-operator/actions/workflows/ci.yaml/badge.svg)](https://github.com/spagno/npmk-operator/actions/workflows/ci.yaml)
 [![Release](https://github.com/spagno/npmk-operator/actions/workflows/release.yaml/badge.svg)](https://github.com/spagno/npmk-operator/actions/workflows/release.yaml)
 [![codecov](https://codecov.io/github/spagno/npmk-operator/graph/badge.svg?token=S8MF8HY6A9)](https://codecov.io/github/spagno/npmk-operator)
-[![Go Version](https://img.shields.io/badge/Go-1.25+-00ADD8?style=flat&logo=go)](https://go.dev/)
+[![Go Version](https://img.shields.io/badge/Go-1.26+-00ADD8?style=flat&logo=go)](https://go.dev/)
 [![Kubernetes](https://img.shields.io/badge/Kubernetes-1.19+-326CE5?style=flat&logo=kubernetes&logoColor=white)](https://kubernetes.io/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 

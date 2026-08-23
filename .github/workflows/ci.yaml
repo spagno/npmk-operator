@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 env:
-  GO_VERSION: ${{ vars.GO_VERSION || '1.25' }}
+  GO_VERSION: ${{ vars.GO_VERSION || '1.26' }}
 
 jobs:
   test:
@@ -15,10 +15,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup Go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v7
         with:
           go-version: ${{ env.GO_VERSION }}
 
@@ -37,7 +37,7 @@ jobs:
         run: go test ./... -v -coverprofile=coverage.txt
 
       - name: Upload coverage
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v7
         with:
           files: ./coverage.txt
           token: ${{ secrets.CODECOV_TOKEN }}
@@ -48,10 +48,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup Go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v7
         with:
           go-version: ${{ env.GO_VERSION }}
 
@@ -68,10 +68,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup Helm
-        uses: azure/setup-helm@v4
+        uses: azure/setup-helm@v5
         with:
           version: v3.14.0
 
@@ -84,10 +84,10 @@ jobs:
     needs: [test, lint]
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup Go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v7
         with:
           go-version: ${{ env.GO_VERSION }}
 
@@ -111,10 +111,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup Go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v7
         with:
           go-version: ${{ env.GO_VERSION }}
 
