@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 env:
-  GO_VERSION: ${{ vars.GO_VERSION || '1.25' }}
+  GO_VERSION: ${{ vars.GO_VERSION || '1.26' }}
 
 jobs:
   test:
